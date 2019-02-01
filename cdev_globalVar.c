@@ -7,8 +7,8 @@
 
 MODULE_LICENSE( "GPL" );
 
-static int globalVar = 0;
-static dev_t cdevMajor;
+int globalVar = 0;
+unsigned int cdevMajor;
 
 static ssize_t  globalVar_read( struct file*, char* __user, size_t, loff_t* );
 static ssize_t  globalVar_write( struct file*, const char* __user, size_t, loff_t* );
@@ -53,6 +53,7 @@ static int globalVar_release( struct inode* inodp, struct file* filp ){
 }
 
 static ssize_t globalVar_read( struct file* filp, char* __user buf, size_t len, loff_t* offset ){
+	printk( "call globalVar_read func\n" );
     if( copy_to_user(buf, &globalVar, sizeof(int)) ){
         return -EFAULT;
     }
@@ -60,6 +61,7 @@ static ssize_t globalVar_read( struct file* filp, char* __user buf, size_t len, 
 }
 
 static ssize_t globalVar_write( struct file* filp, const char* __user buf, size_t len, loff_t* offset ){
+	printk( "call globalVar_write func\n" );
     if( copy_from_user(&globalVar, buf, sizeof(int)) ){
         return - EFAULT;
     }
@@ -67,30 +69,33 @@ static ssize_t globalVar_write( struct file* filp, const char* __user buf, size_
 }
 
 static int __init globalVar_init( void ){
-    int ret;
-    dev_t cdevNo;
-    
+    //int ret;
+    //dev_t cdevNo;
+
+/*    
     ret = alloc_chrdev_region( &cdevNo, 0, 1, "globalVar" );
     if( ret < 0 )
         return ret;
         
     cdevMajor = MAJOR( cdevNo );
+    printk( "cdevNo is: %+d\n", cdevNo );
     printk( "cdevMajor is %d\n", cdevMajor );
-
-    ret = register_chrdev( cdevMajor, "globalVar", &globalVar_fops );
-    if( ret ){
-        unregister_chrdev_region(  );
-        printk( "register chrdev failure!\n" );
-        return ret;
+    printk( "minor is %d\n", MINOR(cdevNo) );
+*/
+    cdevMajor = register_chrdev( 0, "globalVar", &globalVar_fops );
+    if( cdevMajor < 0 ){
+        printk( "register chrdev failure! ret = %+d\n", cdevMajor );
+        return cdevMajor;
     }
     
-    printk( "register chrdev success!\n" );
-    return ret;
+    printk( "register chrdev success! cdevMajor is:%+d\n", cdevMajor );
+    return 0;
 }
 module_init( globalVar_init );
 
 static void __exit globalVar_exit( void ){
     unregister_chrdev( cdevMajor, "globalVar" );
+    printk( "globalVar exit!\n" );
 }
 module_exit( globalVar_exit );
 
