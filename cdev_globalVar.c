@@ -8,6 +8,7 @@
 MODULE_LICENSE( "GPL" );
 
 static int globalVar = 0;
+static dev_t cdevMajor;
 
 static ssize_t  globalVar_read( struct file*, char* __user, size_t, loff_t* );
 static ssize_t  globalVar_write( struct file*, const char* __user, size_t, loff_t* );
@@ -67,15 +68,29 @@ static ssize_t globalVar_write( struct file* filp, const char* __user buf, size_
 
 static int __init globalVar_init( void ){
     int ret;
+    dev_t cdevNo;
     
-    ret = 0;
+    ret = alloc_chrdev_region( &cdevNo, 0, 1, "globalVar" );
+    if( ret < 0 )
+        return ret;
+        
+    cdevMajor = MAJOR( cdevNo );
+    printk( "cdevMajor is %d\n", cdevMajor );
+
+    ret = register_chrdev( cdevMajor, "globalVar", &globalVar_fops );
+    if( ret ){
+        unregister_chrdev_region(  );
+        printk( "register chrdev failure!\n" );
+        return ret;
+    }
     
+    printk( "register chrdev success!\n" );
     return ret;
 }
 module_init( globalVar_init );
 
 static void __exit globalVar_exit( void ){
-    
+    unregister_chrdev( cdevMajor, "globalVar" );
 }
 module_exit( globalVar_exit );
 
