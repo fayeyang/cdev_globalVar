@@ -19,6 +19,9 @@ all:clean
 	@echo objs=$(usrObjs)
 	$(MAKE) -C $(KERNELDIR) M=$(PWD) modules
 
+modules_install:
+	$(MAKE) -C $(KERNELDIR) M=$(PWD) modules_install
+
 .PHONY:clean
 clean:
 	@echo objs=$(usrObjs)

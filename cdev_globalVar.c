@@ -8,6 +8,7 @@
 MODULE_LICENSE( "GPL" );
 
 int globalVar = 0;
+struct file *filp;
 unsigned int cdevMajor;
 
 static ssize_t  globalVar_read( struct file*, char* __user, size_t, loff_t* );
@@ -32,7 +33,7 @@ static long globalVar_ioctl( struct file* filp, unsigned int cmd, unsigned long 
         printk( "in globalVar_ioctl: CMD NO: 1\n" );
         break;
     default:
-        printk( "in globalVar_ioctl: bad cmd\n" );
+        printk( "in globalVar_ioctl: bad cmd!\n" );
     }
     return 0;
 }
@@ -43,28 +44,50 @@ static int globalVar_open( struct inode* inodp, struct file* filp ){
         printk( "Could not reserve module\n" );
         return -1;
     }
+
+    filp = NULL;
+    filp = filp_open( "/dev/globalVar", O_RDWR, S_IRUSR|S_IWUSR );
+    printk( "filp = %+d\n", filp );
+    
+    if( filp < 0 ){
+        return -1;
+    }
+  
     return 0;
 }
 
 static int globalVar_release( struct inode* inodp, struct file* filp ){
+    
+    if( !filp ){
+        filp_close( filp, NULL );
+    }
+    filp = NULL;
+
     printk( "relese globalvar\n" );
     module_put( THIS_MODULE );
+
     return 0;
 }
 
 static ssize_t globalVar_read( struct file* filp, char* __user buf, size_t len, loff_t* offset ){
 	printk( "call globalVar_read func\n" );
+/*
     if( copy_to_user(buf, &globalVar, sizeof(int)) ){
         return -EFAULT;
     }
+*/
+    vfs_read( filp, buf, sizeof(int), 0 );
     return sizeof( int );
 }
 
 static ssize_t globalVar_write( struct file* filp, const char* __user buf, size_t len, loff_t* offset ){
 	printk( "call globalVar_write func\n" );
+/*
     if( copy_from_user(&globalVar, buf, sizeof(int)) ){
         return - EFAULT;
     }
+*/
+    vfs_write( filp, buf, sizeof(int), 0 );
     return sizeof( int );
 }
 
