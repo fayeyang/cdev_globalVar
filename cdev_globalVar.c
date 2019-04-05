@@ -60,9 +60,14 @@ static int globalVar_release( struct inode* inodp, struct file* filp ){
 }
 
 static ssize_t globalVar_read( struct file* filp, char* __user buf, size_t len, loff_t* offset ){
+
+	//char buf[200];
+
     printk( "call globalVar_read func, len = %lu\n", len );
+    printk( "private data:%s\n", (char*)filp->private_data );
 
     if( catFlag ){
+    	//copy_to_user( buf, "-1", 1 );
         catFlag = 0;
         return 0;
     }
