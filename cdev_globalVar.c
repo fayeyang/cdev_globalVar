@@ -7,8 +7,8 @@
 
 MODULE_LICENSE( "GPL" );
 
-int globalVar = 0;
-char gBuf[ 10 ];
+int  catFlag;
+char gBuf[ 100 ];
 unsigned int cdevMajor;
 
 static ssize_t  globalVar_read( struct file*, char* __user, size_t, loff_t* );
@@ -43,28 +43,46 @@ static int globalVar_open( struct inode* inodp, struct file* filp ){
     if( !try_module_get(THIS_MODULE) ){
         printk( "Could not reserve module\n" );
         return -1;
-    }  
+    }
+
+    catFlag = 0;
+
     return 0;
 }
 
 static int globalVar_release( struct inode* inodp, struct file* filp ){
     printk( "relese globalvar\n" );
     module_put( THIS_MODULE );
+    
+    catFlag = 0;
+
     return 0;
 }
 
 static ssize_t globalVar_read( struct file* filp, char* __user buf, size_t len, loff_t* offset ){
-	printk( "call globalVar_read func\n" );
-    copy_to_user(buf, gBuf, 9);
+    printk( "call globalVar_read func, len = %lu\n", len );
 
-    return 9;
+    if( catFlag ){
+        catFlag = 0;
+        return 0;
+    }
+
+    len = strlen( gBuf );
+    len++;
+
+    copy_to_user(buf, gBuf, len);
+
+    catFlag = 1;
+    return len;
 }
 
 static ssize_t globalVar_write( struct file* filp, const char* __user buf, size_t len, loff_t* offset ){
-	printk( "call globalVar_write func\n" );
-    copy_from_user(gBuf, buf, 9);
+    printk( "call globalVar_write func, len = %lu\n", len );
+    
+    memset( gBuf, 0, sizeof(gBuf) );
+    copy_from_user(gBuf, buf, len);
 
-    return 9;
+    return len;
 }
 
 static int __init globalVar_init( void ){
@@ -81,8 +99,9 @@ static int __init globalVar_init( void ){
     printk( "cdevMajor is %d\n", cdevMajor );
     printk( "minor is %d\n", MINOR(cdevNo) );
 */
-	strcpy( gBuf, "hello\n" );
-	
+    memset( gBuf, 0, sizeof(gBuf) );
+    strcpy( gBuf, "hello faye\n" );
+    
     cdevMajor = register_chrdev( 0, "globalVar", &globalVar_fops );
     if( cdevMajor < 0 ){
         printk( "register chrdev failure! ret = %+d\n", cdevMajor );
