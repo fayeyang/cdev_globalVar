@@ -18,12 +18,14 @@ PWD:=$(shell pwd)
 all:clean
 	@echo objs=$(usrObjs)
 	$(MAKE) -C $(KERNELDIR) M=$(PWD) modules
+	$(MAKE) -C test/
 
 modules_install:
 	$(MAKE) -C $(KERNELDIR) M=$(PWD) modules_install
 
 .PHONY:clean
 clean:
+	$(MAKE) -C test/ clean
 	@echo objs=$(usrObjs)
 	# rm -rf *.o *.ko *.mod.c *.mod.o .tmp_versions/ .*.cmd *.order *.symvers .*.mk
 	rm -rf *.o *.ko *.mod.c *.mod.o .tmp_versions/ .*.cmd *.order .*.mk
