@@ -39,7 +39,7 @@ static long globalVar_ioctl( struct file* filp, unsigned int cmd, unsigned long 
 }
 
 static int globalVar_open( struct inode* inodp, struct file* filp ){
-    printk( "in globalVar_open func:\n" );
+    printk( "in globalVar_open func: get this module\n" );
     if( !try_module_get(THIS_MODULE) ){
         printk( "Could not reserve module\n" );
         return -1;
@@ -51,7 +51,7 @@ static int globalVar_open( struct inode* inodp, struct file* filp ){
 }
 
 static int globalVar_release( struct inode* inodp, struct file* filp ){
-    printk( "release globalvar\n" );
+    printk( "in globalVar_release func: put this module\n" );
     module_put( THIS_MODULE );
     
     catFlag = 0;
@@ -62,6 +62,8 @@ static int globalVar_release( struct inode* inodp, struct file* filp ){
 static ssize_t globalVar_read( struct file* filp, char* __user buf, size_t len, loff_t* offset ){
 
 	//char buf[200];
+
+	size_t tmp;
 
     printk( "call globalVar_read func, len = %lu\n", len );
     printk( "private data:%s\n", (char*)filp->private_data );
@@ -77,10 +79,13 @@ static ssize_t globalVar_read( struct file* filp, char* __user buf, size_t len, 
     len++;
 #endif
 
-    copy_to_user( buf, gBuf, len );
+    len > 100 ? tmp = 100 : len;
+    printk( "len = %lu\n", tmp );
+
+    copy_to_user( buf, gBuf, tmp );
 
     catFlag = 1;
-    return 0;
+    return 20;
 }
 
 static ssize_t globalVar_write( struct file* filp, const char* __user buf, size_t len, loff_t* offset ){
