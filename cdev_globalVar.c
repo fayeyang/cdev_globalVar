@@ -51,7 +51,7 @@ static int globalVar_open( struct inode* inodp, struct file* filp ){
 }
 
 static int globalVar_release( struct inode* inodp, struct file* filp ){
-    printk( "relese globalvar\n" );
+    printk( "release globalvar\n" );
     module_put( THIS_MODULE );
     
     catFlag = 0;
@@ -66,6 +66,7 @@ static ssize_t globalVar_read( struct file* filp, char* __user buf, size_t len, 
     printk( "call globalVar_read func, len = %lu\n", len );
     printk( "private data:%s\n", (char*)filp->private_data );
 
+#if 0
     if( catFlag ){
     	//copy_to_user( buf, "-1", 1 );
         catFlag = 0;
@@ -74,20 +75,21 @@ static ssize_t globalVar_read( struct file* filp, char* __user buf, size_t len, 
 
     len = strlen( gBuf );
     len++;
+#endif
 
-    copy_to_user(buf, gBuf, len);
+    copy_to_user( buf, gBuf, len );
 
     catFlag = 1;
-    return len;
+    return 0;
 }
 
 static ssize_t globalVar_write( struct file* filp, const char* __user buf, size_t len, loff_t* offset ){
     printk( "call globalVar_write func, len = %lu\n", len );
     
     memset( gBuf, 0, sizeof(gBuf) );
-    copy_from_user(gBuf, buf, len);
+    copy_from_user( gBuf, buf, len );
 
-    return len;
+    return 0;
 }
 
 static int __init globalVar_init( void ){
