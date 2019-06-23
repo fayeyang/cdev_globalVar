@@ -7,6 +7,7 @@
 
 MODULE_LICENSE( "GPL" );
 
+int  gOffset;
 int  catFlag;
 char gBuf[ 100 ];
 unsigned int cdevMajor;
@@ -39,6 +40,7 @@ static long globalVar_ioctl( struct file* filp, unsigned int cmd, unsigned long 
 }
 
 static int globalVar_open( struct inode* inodp, struct file* filp ){
+
     printk( "in globalVar_open func: get this module\n" );
     if( !try_module_get(THIS_MODULE) ){
         printk( "Could not reserve module\n" );
@@ -46,6 +48,7 @@ static int globalVar_open( struct inode* inodp, struct file* filp ){
     }
 
     catFlag = 0;
+    gOffset  = 0;
 
     return 0;
 }
@@ -61,31 +64,22 @@ static int globalVar_release( struct inode* inodp, struct file* filp ){
 
 static ssize_t globalVar_read( struct file* filp, char* __user buf, size_t len, loff_t* offset ){
 
-	//char buf[200];
-
 	size_t tmp;
 
     printk( "call globalVar_read func, len = %lu\n", len );
+    printk( "read offset:%lu\n", offset );
+    printk( "file offset:%lu\n", filp->f_pos );
     printk( "private data:%s\n", (char*)filp->private_data );
 
-#if 0
-    if( catFlag ){
-    	//copy_to_user( buf, "-1", 1 );
-        catFlag = 0;
-        return 0;
-    }
+    tmp = strlen( gBuf );
+    if( gOffset >= tmp )
+    	return 0;
 
-    len = strlen( gBuf );
-    len++;
-#endif
+    tmp = tmp - gOffset;
+    copy_to_user( buf, gBuf, tmp+1 );
+    gOffset = tmp + 1;
 
-    len > 100 ? tmp = 100 : len;
-    printk( "len = %lu\n", tmp );
-
-    copy_to_user( buf, gBuf, tmp );
-
-    catFlag = 1;
-    return 20;
+    return gOffset;
 }
 
 static ssize_t globalVar_write( struct file* filp, const char* __user buf, size_t len, loff_t* offset ){
