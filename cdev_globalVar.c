@@ -7,8 +7,8 @@
 
 MODULE_LICENSE( "GPL" );
 
-int  gOffset;
-int  catFlag;
+unsigned int  offset_read;
+unsigned int  offset_write;
 char gBuf[ 100 ];
 unsigned int cdevMajor;
 
@@ -34,7 +34,7 @@ static long globalVar_ioctl( struct file* filp, unsigned int cmd, unsigned long 
         printk( "in globalVar_ioctl: CMD NO: 1\n" );
         break;
     default:
-        printk( "in globalVar_ioctl: bad cmd!\n" );
+        printk( "in globalVar_ioctl: bad cmd:%u\n", cmd );
     }
     return 0;
 }
@@ -47,8 +47,8 @@ static int globalVar_open( struct inode* inodp, struct file* filp ){
         return -1;
     }
 
-    catFlag = 0;
-    gOffset  = 0;
+    offset_read  = 0;
+    offset_write = 0;
 
     return 0;
 }
@@ -56,8 +56,6 @@ static int globalVar_open( struct inode* inodp, struct file* filp ){
 static int globalVar_release( struct inode* inodp, struct file* filp ){
     printk( "in globalVar_release func: put this module\n" );
     module_put( THIS_MODULE );
-    
-    catFlag = 0;
 
     return 0;
 }
@@ -67,28 +65,42 @@ static ssize_t globalVar_read( struct file* filp, char* __user buf, size_t len, 
 	size_t tmp;
 
     printk( "call globalVar_read func, len = %lu\n", len );
-    printk( "read offset:%lu\n", offset );
-    printk( "file offset:%lu\n", filp->f_pos );
+    printk( "read offset:%lli\n", *offset );
+    printk( "file offset:%lli\n",  filp->f_pos );
     printk( "private data:%s\n", (char*)filp->private_data );
 
     tmp = strlen( gBuf );
-    if( gOffset >= tmp )
+    if( offset_read >= tmp )
     	return 0;
 
-    tmp = tmp - gOffset;
+    tmp = tmp - offset_read;
     copy_to_user( buf, gBuf, tmp+1 );
-    gOffset = tmp + 1;
+    offset_read = tmp + 1;
 
-    return gOffset;
+    return offset_read;
 }
 
 static ssize_t globalVar_write( struct file* filp, const char* __user buf, size_t len, loff_t* offset ){
-    printk( "call globalVar_write func, len = %lu\n", len );
-    
-    memset( gBuf, 0, sizeof(gBuf) );
-    copy_from_user( gBuf, buf, len );
 
-    return 0;
+	unsigned int tmp;
+
+	printk( "call globalVar_write func, len = %lu\n", len );
+    printk( "file offset is: %lli\n", *offset );
+    printk( "write offset is: %u\n", offset_write );
+
+	if( offset_write == 0 )
+		memset( gBuf, 0, sizeof(gBuf) );
+
+    tmp = (len>99) ? 99 : len;
+    printk( "tmp is: %u\n", tmp );
+
+    if( (offset_write + tmp) > 99 )
+    	offset_write = 0;
+    
+    copy_from_user( (gBuf+offset_write), buf, tmp );
+    offset_write += tmp;
+
+    return len;
 }
 
 static int __init globalVar_init( void ){
