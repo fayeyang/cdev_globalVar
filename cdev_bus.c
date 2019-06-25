@@ -46,6 +46,7 @@ static void globalMem_bus_shutdown( struct device *dev ){
     printk( "=== globalMem_bus_shutdown() end ===" );
 }
 
+/* 定义一个总线属性对象 */
 static ssize_t globalMem_bus_author_show( struct bus_type *bus, char *buf ){
     return snprintf( buf, (PAGE_SIZE-2), "%s\n", globalMem_bus_author );  /*
                                 * snprintf()函数最多写入size-1个字符,并自动在字符串末尾加上结束符
@@ -56,7 +57,8 @@ static ssize_t globalMem_bus_author_store( struct bus_type *bus, const char *buf
     return snprintf( globalMem_bus_author, (PAGE_SIZE-2), "%s\n", buf );
 }
 
-static BUS_ATTR( globalMem_bus_author, (S_IRUGO|S_IWUSR|S_IWGRP), globalMem_bus_author_show, globalMem_bus_author_store );
+static BUS_ATTR( globalMem_bus_author, (S_IRUGO|S_IWUSR|S_IWGRP), globalMem_bus_author_show, globalMem_bus_author_store ); /*
+                                    * BUS_ATTR()宏会在本处会生成名为bus_attr_faye_bus_author的bus_attribute类型对象 */
 
 static ssize_t globalMem_bus_attr_show( struct bus_type *bus, char *buf ){
     return snprintf( buf, (PAGE_SIZE-2), "%s\n", globalMem_bus_attr );
@@ -76,6 +78,7 @@ static ssize_t globalMem_bus_attrGroup_store( struct bus_type *bus, const char *
     return snprintf( globalMem_bus_attrGroup, (PAGE_SIZE-2), "%s\n", buf );
 }
 
+/* 定义一个bus_attribute对象,并将其封装到attribute_group对象中 */
 static BUS_ATTR( globalMem_bus_attrGroup, (S_IRUGO|S_IWUSR|S_IWGRP), globalMem_bus_attrGroup_show, globalMem_bus_attrGroup_store );
 
 struct attribute_group globalMem_bus_attrGroup_set = {
@@ -84,16 +87,27 @@ struct attribute_group globalMem_bus_attrGroup_set = {
 };
 
 struct bus_type globalMem_bus = {
-    .name = "globalMem",
-    .match = globalMem_bus_match,
-    .uevent = globalMem_bus_uevent,
-    .shutdown = globalMem_bus_shutdown,
-    .probe = globalMem_bus_probe,
-    .remove = globalMem_bus_remove,
+    .name       = "globalMem",
+    .match      =  globalMem_bus_match,
+    .uevent     =  globalMem_bus_uevent,
+    .shutdown   =  globalMem_bus_shutdown,
+    .probe      =  globalMem_bus_probe,
+    .remove     =  globalMem_bus_remove,
     .bus_groups = ( const struct attribute_group*[] ){ &globalMem_bus_attrGroup_set, NULL },
 };
 EXPORT_SYMBOL( globalMem_bus );
 
+/* 总线device对象相关 */
 
+void globalMem_busDevice_release( struct device *dev ){
+    printk( "=== globalMem_busDevice_release() start ===\n" );
+    printk( "device is: %s\n", dev_name(dev) );
+    printk( "=== globalMem_busDevice_release() end ===" );
+}
 
-
+struct device globalMem_busDevice = {
+    .init_name  = "globalMem_busDevice",
+    .bus        = &globalMem_bus,
+    .release    =  globalMem_busDevice_release,
+};
+EXPORT_SYMBOL( globalMem_busDevice );
