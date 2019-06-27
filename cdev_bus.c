@@ -81,10 +81,12 @@ static ssize_t globalMem_bus_attrGroup_store( struct bus_type *bus, const char *
 /* 定义一个bus_attribute对象,并将其封装到attribute_group对象中 */
 static BUS_ATTR( globalMem_bus_attrGroup, (S_IRUGO|S_IWUSR|S_IWGRP), globalMem_bus_attrGroup_show, globalMem_bus_attrGroup_store );
 
-struct attribute_group globalMem_bus_attrGroup_set = {
+const struct attribute_group  globalMem_bus_attrGroup_set = {
     .name  = "globalMem_bus_attrGroup_name",
     .attrs = (struct attribute*[]){ &(bus_attr_globalMem_bus_attrGroup.attr), NULL },
 };
+
+const struct attribute_group** ttt = ( const struct attribute_group*[] ){ &globalMem_bus_attrGroup_set, NULL };
 
 struct bus_type globalMem_bus = {
     .name       = "globalMem",
@@ -111,3 +113,58 @@ struct device globalMem_busDevice = {
     .release    =  globalMem_busDevice_release,
 };
 EXPORT_SYMBOL( globalMem_busDevice );
+
+static ssize_t globalMem_busDevice_attr_show( struct device *dev, struct device_attribute *attr, char *buf ){
+    return snprintf( buf, (PAGE_SIZE-2), "%s\n", globalMem_busDev_attr );
+}
+
+static ssize_t globalMem_busDevice_attr_store( struct device *dev, struct device_attribute *attr, const char *buf, size_t count ){
+    return snprintf( globalMem_busDev_attr, (PAGE_SIZE-2), "%s\n", buf );
+}
+
+static DEVICE_ATTR( globalMem_busDevice_attr, (S_IRUGO|S_IWUSR|S_IWGRP), globalMem_busDevice_attr_show, globalMem_busDevice_attr_store );
+
+static int __init globalMem_bus_init( void ){
+    int ret;
+    struct bus_type *busPtr;
+    
+    printk( "******* globalMem_bus_init() start *******\n" );
+    ret = bus_register( &globalMem_bus );
+    if( ret )
+        return ret;
+    
+    busPtr = &globalMem_bus;
+    bus_add_groups( busPtr, busPtr->bus_groups );
+
+    if( bus_create_file( &globalMem_bus, &bus_attr_globalMem_bus_author ) )
+        printk( "Unable to create globalMem_bus author attribute file\n" );
+    if( bus_create_file( &globalMem_bus, &bus_attr_globalMem_bus_attr ) )
+        printk( "Unable to create globalMem_bus attribute file\n " );
+
+    printk( "globamMem_bus register success!\n" );
+    
+    if( device_register( &globalMem_busDevice ) )
+        printk( "register globalMem_busDevice fail!\n" );
+
+    if( device_create_file( &globalMem_busDevice, &dev_attr_globalMem_busDevice_attr ) )
+        printk( "Unable to create globalMem_busDevice attribute file\n" );
+
+    globalMem_bus.dev_root = &globalMem_busDevice;
+
+    printk( "******* globalMem_bus_init() end *******\n" );
+    
+    return ret;
+}
+EXPORT_SYMBOL( globalMem_bus_init );
+
+static void __exit globalMem_bus_exit( void ){
+    printk( "******* globalMem_bus_exit() end *******\n" );
+    device_unregister( &globalMem_busDevice );
+    bus_unregister( &globalMem_bus );
+    printk( "******* globalMem_bus_exit() end *******\n" );
+}
+EXPORT_SYMBOL( globalMem_bus_exit );
+
+//module_init( globalMem_bus_init );
+//module_exit( globalMem_bus_exit );
+

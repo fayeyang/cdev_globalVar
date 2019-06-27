@@ -17,6 +17,7 @@ PWD:=$(shell pwd)
 
 all:clean
 	@echo objs=$(usrObjs)
+	@echo MAKE = $(MAKE)
 	$(MAKE) -C $(KERNELDIR) M=$(PWD) modules
 	$(MAKE) -C test/
 
