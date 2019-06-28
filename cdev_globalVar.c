@@ -5,7 +5,11 @@
 #include <linux/string.h>
 #include <linux/uaccess.h>
 
+MODULE_AUTHOR( "faye" );
 MODULE_LICENSE( "GPL" );
+
+extern int __init globalMem_bus_init( void );
+extern void __exit globalMem_bus_exit( void );
 
 unsigned int  offset_read;
 unsigned int  offset_write;
@@ -126,12 +130,17 @@ static int __init globalVar_init( void ){
         return cdevMajor;
     }
     
+    globalMem_bus_init();
+    
     printk( "register chrdev success! cdevMajor is:%+d\n", cdevMajor );
     return 0;
 }
 module_init( globalVar_init );
 
 static void __exit globalVar_exit( void ){
+    
+    globalMem_bus_exit();
+    
     unregister_chrdev( cdevMajor, "globalVar" );
     printk( "globalVar exit!\n" );
 }

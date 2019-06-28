@@ -4,7 +4,25 @@
 #include  <linux/string.h>
 #include  <linux/device.h>
 
+MODULE_AUTHOR( "faye" );
 MODULE_LICENSE( "GPL" );
+
+#if 1
+struct subsys_private {
+    struct kset subsys;
+    struct kset *devices_kset;
+    struct list_head interfaces;
+    struct mutex mutex;
+    struct kset *drivers_kset;
+    struct klist klist_devices;
+    struct klist klist_drivers;
+    struct blocking_notifier_head bus_notifier;
+    unsigned int drivers_autoprobe:1;
+    struct bus_type *bus;
+    struct kset glue_dirs;
+    struct class *class;
+};
+#endif
 
 char globalMem_bus_author[ PAGE_SIZE ]    = "FayeYang";
 char globalMem_bus_attr[ PAGE_SIZE ]      = "globalMem bus attr";
@@ -70,6 +88,10 @@ static ssize_t globalMem_bus_attr_store( struct bus_type *bus, const char *buf, 
 
 static BUS_ATTR( globalMem_bus_attr, (S_IRUGO|S_IWUSR|S_IWGRP), globalMem_bus_attr_show, globalMem_bus_attr_store );
 
+static int bus_add_groups( struct bus_type *bus, const struct attribute_group **groups ){
+    return sysfs_create_groups( &bus->p->subsys.kobj, groups );
+}
+
 static ssize_t globalMem_bus_attrGroup_show( struct bus_type *bus, char *buf ){
     return snprintf( buf, (PAGE_SIZE-2), "%s\n", globalMem_bus_attrGroup );
 }
@@ -86,8 +108,6 @@ const struct attribute_group  globalMem_bus_attrGroup_set = {
     .attrs = (struct attribute*[]){ &(bus_attr_globalMem_bus_attrGroup.attr), NULL },
 };
 
-const struct attribute_group** ttt = ( const struct attribute_group*[] ){ &globalMem_bus_attrGroup_set, NULL };
-
 struct bus_type globalMem_bus = {
     .name       = "globalMem",
     .match      =  globalMem_bus_match,
@@ -95,7 +115,7 @@ struct bus_type globalMem_bus = {
     .shutdown   =  globalMem_bus_shutdown,
     .probe      =  globalMem_bus_probe,
     .remove     =  globalMem_bus_remove,
-    .bus_groups = ( const struct attribute_group*[] ){ &globalMem_bus_attrGroup_set, NULL },
+    //.bus_groups = ( const struct attribute_group*[] ){ &globalMem_bus_attrGroup_set, NULL },
 };
 EXPORT_SYMBOL( globalMem_bus );
 
@@ -124,17 +144,16 @@ static ssize_t globalMem_busDevice_attr_store( struct device *dev, struct device
 
 static DEVICE_ATTR( globalMem_busDevice_attr, (S_IRUGO|S_IWUSR|S_IWGRP), globalMem_busDevice_attr_show, globalMem_busDevice_attr_store );
 
-static int __init globalMem_bus_init( void ){
+int globalMem_bus_init( void ){
     int ret;
-    struct bus_type *busPtr;
     
     printk( "******* globalMem_bus_init() start *******\n" );
+
     ret = bus_register( &globalMem_bus );
     if( ret )
         return ret;
     
-    busPtr = &globalMem_bus;
-    bus_add_groups( busPtr, busPtr->bus_groups );
+    bus_add_groups( &globalMem_bus, ( const struct attribute_group*[] ){ &globalMem_bus_attrGroup_set, NULL } );
 
     if( bus_create_file( &globalMem_bus, &bus_attr_globalMem_bus_author ) )
         printk( "Unable to create globalMem_bus author attribute file\n" );
@@ -150,16 +169,17 @@ static int __init globalMem_bus_init( void ){
         printk( "Unable to create globalMem_busDevice attribute file\n" );
 
     globalMem_bus.dev_root = &globalMem_busDevice;
-
+    printk( "globalMem_busDevice register success!\n" );
     printk( "******* globalMem_bus_init() end *******\n" );
     
     return ret;
 }
 EXPORT_SYMBOL( globalMem_bus_init );
 
-static void __exit globalMem_bus_exit( void ){
-    printk( "******* globalMem_bus_exit() end *******\n" );
-    device_unregister( &globalMem_busDevice );
+void globalMem_bus_exit( void ){
+    printk( "******* globalMem_bus_exit() start *******\n" );
+    //device_unregister( &globalMem_busDevice );
+    printk( "globalMem_busDevice is: %lu\n", (unsigned long)&globalMem_bus );
     bus_unregister( &globalMem_bus );
     printk( "******* globalMem_bus_exit() end *******\n" );
 }
