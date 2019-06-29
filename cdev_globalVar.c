@@ -11,9 +11,9 @@ MODULE_LICENSE( "GPL" );
 extern int __init globalMem_bus_init( void );
 extern void __exit globalMem_bus_exit( void );
 
-unsigned int  offset_read;
-unsigned int  offset_write;
-char gBuf[ 100 ];
+unsigned int  offset_read;   /* 设备文件读偏移量 */
+unsigned int  offset_write;  /* 设备文件写偏移量 */
+char gBuf[ 100 ];            /* 设备文件内存缓冲区 */
 unsigned int cdevMajor;
 
 static ssize_t  globalVar_read( struct file*, char* __user, size_t, loff_t* );
@@ -73,13 +73,14 @@ static ssize_t globalVar_read( struct file* filp, char* __user buf, size_t len, 
     printk( "file offset:%lli\n",  filp->f_pos );
     printk( "private data:%s\n", (char*)filp->private_data );
 
-    tmp = strlen( gBuf );
+    tmp = strlen( gBuf );  /* strlen()函数会返回缓冲区中字符串的长度，不包含该字符串末尾的null结束符 */
+    tmp++;
     if( offset_read >= tmp )
     	return 0;
 
     tmp = tmp - offset_read;
-    copy_to_user( buf, gBuf, tmp+1 );
-    offset_read = tmp + 1;
+    copy_to_user( buf, gBuf, tmp );
+    offset_read = tmp;
 
     return offset_read;
 }
