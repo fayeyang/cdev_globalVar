@@ -66,46 +66,61 @@ static int globalVar_release( struct inode* inodp, struct file* filp ){
 
 static ssize_t globalVar_read( struct file* filp, char* __user buf, size_t len, loff_t* offset ){
 
-	size_t tmp;
+	unsigned int slen;
 
-    printk( "call globalVar_read func, len = %lu\n", len );
-    printk( "read offset:%lli\n", *offset );
-    printk( "file offset:%lli\n",  filp->f_pos );
-    printk( "private data:%s\n", (char*)filp->private_data );
+    printk( "======= call globalVar_read func, len = %lu =======\n", len );
+    printk( "offset arg   is: %lli\n", *offset );
+    printk( "file->offset is: %lli\n",  filp->f_pos );
+    printk( "private data is: %s\n", (char*)filp->private_data );
+    printk( "offset_read  is: %u\n",    offset_read );
 
-    tmp = strlen( gBuf );  /* strlen()函数会返回缓冲区中字符串的长度，不包含该字符串末尾的null结束符 */
-    tmp++;
-    if( offset_read >= tmp )
-    	return 0;
+    slen = strlen( gBuf );  /* strlen()函数会返回缓冲区中字符串的长度，不包含该字符串末尾的null结束符 */
+    slen++;                 /* 缓冲区中字符串长度需包含末尾的null结束符 */
+    if( offset_read >= slen )
+    	return 0;  /* 当读函数返回0时,表示已无数据可读,应用程序不会再次调用本函数,否则应用程序会再次调用本函数 */
 
-    tmp = tmp - offset_read;
-    copy_to_user( buf, gBuf, tmp );
-    offset_read = tmp;
+    slen = slen - offset_read;
+    
+    printk( "slen is: %u\n", slen );
+    
+    copy_to_user( buf, gBuf, slen );
+    offset_read += slen;    /* 在读偏移量上累加本次读取数据的长度 */
 
-    return offset_read;
+    printk( "offset_read changed to: %u\n", offset_read );
+
+    return offset_read;  /* 
+            * 返回所读出字符串的长度,若返回值非0,则表示可能还有后续数据待读,则应用程序会再次调用本函数;
+            * 若返回值为0,则表示已无数据可读,应用程序不会再次调用本函数 */
 }
 
 static ssize_t globalVar_write( struct file* filp, const char* __user buf, size_t len, loff_t* offset ){
 
-	unsigned int tmp;
+	unsigned int slen;
 
-	printk( "call globalVar_write func, len = %lu\n", len );
-    printk( "file offset is: %lli\n", *offset );
-    printk( "write offset is: %u\n", offset_write );
+	printk( "+++++++ call globalVar_write func, len = %lu +++++++\n", len );
+    printk( "offset arg   is: %lli\n", *offset );
+    printk( "file->offset is: %lli\n",  filp->f_pos );
+    printk( "private data is: %s\n", (char*)filp->private_data );
+    printk( "offset_write is: %u\n",    offset_write );
 
+    /* 在开始写内存缓冲区之前,先清空该缓冲区 */
 	if( offset_write == 0 )
 		memset( gBuf, 0, sizeof(gBuf) );
 
-    tmp = (len>99) ? 99 : len;
-    printk( "tmp is: %u\n", tmp );
+    /* 该缓冲区最大长度为100 */
+    slen = (len>100) ? 100 : len;
+    printk( "slen is: %u\n", slen );
 
-    if( (offset_write + tmp) > 99 )
+    /* 若当前的写位置加上要写入数据长度大于缓冲区最大长度,则从缓冲区首位置开始写入 */
+    if( (offset_write + slen) > 99 )
     	offset_write = 0;
     
-    copy_from_user( (gBuf+offset_write), buf, tmp );
-    offset_write += tmp;
+    copy_from_user( (gBuf+offset_write), buf, slen );
+    offset_write += slen;       /* 在写偏移量上累加本次写入数据的长度 */
 
-    return len;
+    printk( "offset_write changed to: %u\n", offset_write );
+
+    return slen;
 }
 
 static int __init globalVar_init( void ){
