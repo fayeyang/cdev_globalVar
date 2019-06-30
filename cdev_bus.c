@@ -94,24 +94,25 @@ static void globalMem_bus_shutdown( struct device *dev ){
 
 /* 定义一个总线属性对象 */
 static ssize_t globalMem_bus_author_show( struct bus_type *bus, char *buf ){
-    return snprintf( buf, (PAGE_SIZE-1), "%s\n", globalMem_bus_author );  /*
+    return snprintf( buf, PAGE_SIZE, "%s\n", globalMem_bus_author );  /*
                        * snprintf()函数最多写入size-1个字符,并自动在字符串末尾加上'\0'结束符
-                       * snprintf()函数会返回格式化后字符串的总长度，而不是实际写入缓冲区的长度，不包含‘\0’结束符 */
+                       * snprintf()函数会返回格式化后字符串的总长度，而不是实际写入缓冲区的长度，不包含‘\0’结束符
+                       * d` */
 }
 
 static ssize_t globalMem_bus_author_store( struct bus_type *bus, const char *buf, size_t count ){
-    return snprintf( globalMem_bus_author, (PAGE_SIZE-1), "%s\n", buf );
+    return snprintf( globalMem_bus_author, PAGE_SIZE, "%s", buf );
 }
 
 static BUS_ATTR( globalMem_bus_author, (S_IRUGO|S_IWUSR|S_IWGRP), globalMem_bus_author_show, globalMem_bus_author_store ); /*
                                     * BUS_ATTR()宏会生成名为bus_attr_globalMem_bus_author的bus_attribute类型对象 */
 
 static ssize_t globalMem_bus_attr_show( struct bus_type *bus, char *buf ){
-    return snprintf( buf, (PAGE_SIZE-1), "%s\n", globalMem_bus_attr );
+    return snprintf( buf, PAGE_SIZE, "%s\n", globalMem_bus_attr );
 }
 
 static ssize_t globalMem_bus_attr_store( struct bus_type *bus, const char *buf, size_t count ){
-    return snprintf( globalMem_bus_attr, (PAGE_SIZE-1), "%s\n", buf );
+    return snprintf( globalMem_bus_attr, PAGE_SIZE, "%s", buf );
 }
 
 static BUS_ATTR( globalMem_bus_attr, (S_IRUGO|S_IWUSR|S_IWGRP), globalMem_bus_attr_show, globalMem_bus_attr_store );
@@ -125,11 +126,11 @@ static int bus_add_groups( struct bus_type *bus, const struct attribute_group **
 }
 
 static ssize_t globalMem_bus_attrGroup_show( struct bus_type *bus, char *buf ){
-    return snprintf( buf, (PAGE_SIZE-1), "%s\n", globalMem_bus_attrGroup );
+    return snprintf( buf, PAGE_SIZE, "%s\n", globalMem_bus_attrGroup );
 }
 
 static ssize_t globalMem_bus_attrGroup_store( struct bus_type *bus, const char *buf, size_t count ){
-    return snprintf( globalMem_bus_attrGroup, (PAGE_SIZE-1), "%s\n", buf );
+    return snprintf( globalMem_bus_attrGroup, PAGE_SIZE, "%s", buf );
 }
 
 /* 定义一个名为bus_attr_globalMem_bus_attrGroup的bus_attribute对象 */
@@ -174,11 +175,11 @@ struct device globalMem_busDevice = {
 EXPORT_SYMBOL( globalMem_busDevice );
 
 static ssize_t globalMem_busDevice_attr_show( struct device *dev, struct device_attribute *attr, char *buf ){
-    return snprintf( buf, (PAGE_SIZE-1), "%s\n", globalMem_busDev_attr );
+    return snprintf( buf, PAGE_SIZE, "%s\n", globalMem_busDev_attr );
 }
 
 static ssize_t globalMem_busDevice_attr_store( struct device *dev, struct device_attribute *attr, const char *buf, size_t count ){
-    return snprintf( globalMem_busDev_attr, (PAGE_SIZE-1), "%s\n", buf );
+    return snprintf( globalMem_busDev_attr, PAGE_SIZE, "%s", buf );
 }
 
 static DEVICE_ATTR( globalMem_busDevice_attr, (S_IRUGO|S_IWUSR|S_IWGRP), globalMem_busDevice_attr_show, globalMem_busDevice_attr_store );

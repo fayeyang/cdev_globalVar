@@ -89,7 +89,8 @@ static ssize_t globalVar_read( struct file* filp, char* __user buf, size_t len, 
     printk( "offset_read changed to: %u\n", offset_read );
 
     return offset_read;  /* 
-            * 返回所读出字符串的长度,若返回值非0,则表示可能还有后续数据待读,则应用程序会再次调用本函数;
+            * 读函数会返回所读出字符串的长度。经实践验证（在使用cat命令或sublime编辑器查看字符设备文件时），
+            * 若返回值非0,则表示可能还有后续数据待读,应用程序会再次调用本函数;
             * 若返回值为0,则表示已无数据可读,应用程序不会再次调用本函数 */
 }
 
@@ -120,7 +121,10 @@ static ssize_t globalVar_write( struct file* filp, const char* __user buf, size_
 
     printk( "offset_write changed to: %u\n", offset_write );
 
-    return slen;
+    return slen;  /* 
+        * 写函数会返回所写入数据的长度。经实践验证（在使用echo命令或sublime编辑器写字符设备文件时），
+        * 若返回值不等于传入的len实参，则说明还有数据待写入，应用程序会再次调用本函数；
+        * 若返回值等于传入的len实参，则表示全部数据已写入完毕，应用程序不会再次调用本函数 */
 }
 
 static int __init globalVar_init( void ){
