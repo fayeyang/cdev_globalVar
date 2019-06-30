@@ -8,7 +8,7 @@
 MODULE_AUTHOR( "faye" );
 MODULE_LICENSE( "GPL" );
 
-extern int __init globalMem_bus_init( void );
+extern int __init globalMem_bus_init( unsigned int cdevMajor );
 extern void __exit globalMem_bus_exit( void );
 
 unsigned int  offset_read;   /* 设备文件读偏移量 */
@@ -150,7 +150,7 @@ static int __init globalVar_init( void ){
         return cdevMajor;
     }
     
-    globalMem_bus_init();
+    globalMem_bus_init( cdevMajor );
     
     printk( "register chrdev success! cdevMajor is:%+d\n", cdevMajor );
     return 0;

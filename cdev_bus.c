@@ -97,11 +97,12 @@ static ssize_t globalMem_bus_author_show( struct bus_type *bus, char *buf ){
     return snprintf( buf, PAGE_SIZE, "%s\n", globalMem_bus_author );  /*
                        * snprintf()函数最多写入size-1个字符,并自动在字符串末尾加上'\0'结束符
                        * snprintf()函数会返回格式化后字符串的总长度，而不是实际写入缓冲区的长度，不包含‘\0’结束符
-                       * d` */
+                       * 在输出字符设备文件缓冲区时,额外输出1个换行符,这样在命令行中输出该缓冲区内容(比如cat命令)时,可读性较好 */
 }
 
 static ssize_t globalMem_bus_author_store( struct bus_type *bus, const char *buf, size_t count ){
-    return snprintf( globalMem_bus_author, PAGE_SIZE, "%s", buf );
+    return snprintf( globalMem_bus_author, PAGE_SIZE, "%s", buf );  /*
+                       * 在保存字符设备文件缓冲区时,按原样格式保存,不附加其他字符 */
 }
 
 static BUS_ATTR( globalMem_bus_author, (S_IRUGO|S_IWUSR|S_IWGRP), globalMem_bus_author_show, globalMem_bus_author_store ); /*
@@ -166,6 +167,7 @@ void globalMem_busDevice_release( struct device *dev ){
     printk( "=== globalMem_busDevice_release() end ===" );
 }
 
+#if 0
 /* 用户自定义总线所对应的device对象，作为本总线下所有设备的父设备 */
 struct device globalMem_busDevice = {
     .init_name  = "globalMem_busDevice",
@@ -173,6 +175,7 @@ struct device globalMem_busDevice = {
     .release    =  globalMem_busDevice_release,
 };
 EXPORT_SYMBOL( globalMem_busDevice );
+#endif
 
 static ssize_t globalMem_busDevice_attr_show( struct device *dev, struct device_attribute *attr, char *buf ){
     return snprintf( buf, PAGE_SIZE, "%s\n", globalMem_busDev_attr );
@@ -184,7 +187,7 @@ static ssize_t globalMem_busDevice_attr_store( struct device *dev, struct device
 
 static DEVICE_ATTR( globalMem_busDevice_attr, (S_IRUGO|S_IWUSR|S_IWGRP), globalMem_busDevice_attr_show, globalMem_busDevice_attr_store );
 
-int __init globalMem_bus_init( void ){
+int __init globalMem_bus_init( unsigned int cdevMajor ){
     int ret;
     
     printk( "******* globalMem_bus_init() start *******\n" );
@@ -202,13 +205,16 @@ int __init globalMem_bus_init( void ){
 
     printk( "globamMem_bus register success!\n" );
     
-    if( device_register( &globalMem_busDevice ) )
-        printk( "register globalMem_busDevice fail!\n" );
+    device_create( NULL, NULL, MKDEV(cdevMajor, 0), NULL, "globalMem_busDevice" );
+    
+    //if( device_register( &globalMem_busDevice ) )
+    //    printk( "register globalMem_busDevice fail!\n" );
 
-    if( device_create_file( &globalMem_busDevice, &dev_attr_globalMem_busDevice_attr ) )
-        printk( "Unable to create globalMem_busDevice attribute file\n" );
+    //if( device_create_file( &globalMem_busDevice, &dev_attr_globalMem_busDevice_attr ) )
+    //    printk( "Unable to create globalMem_busDevice attribute file\n" );
 
-    globalMem_bus.dev_root = &globalMem_busDevice;  /*
+    //globalMem_bus.dev_root = &globalMem_busDevice;  
+    /*
                 * 在注册完总线device对象后，将其所属总线的bus_type->dev_root字段指向该device对象。
                 * 注意，若设置了总线bus对象的dev_root字段，则在调用bus_unregister()注销该总线过程中，
                 * 会自动调用device_unregister()函数注销dev_root字段所指向的device对象。
