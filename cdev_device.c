@@ -70,5 +70,7 @@ static int __init globalMem_device_init( void ){
     printk( "======= globalMem_device_init() start =======\n" );
     
     ret = device_register( &globalMem_device );
+    
+    return 0;
 }
 

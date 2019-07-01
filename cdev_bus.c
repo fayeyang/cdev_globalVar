@@ -9,6 +9,8 @@ MODULE_LICENSE( "GPL" );  /*
     * 注意,本行不可省略,否则即使能成功编译,但在加载本模块时,
     * 会提示"Unknown symbol in module",并会在dmesg命令中给出所缺少的符号 */
 
+struct class * globalMem_class;
+
 #if 1
 /*
  * 由于内核中的bus_add_groups()函数未通过EXPORT_SYMBOL_GPL()导出（可参考本文中的
@@ -167,6 +169,7 @@ void globalMem_busDevice_release( struct device *dev ){
     printk( "=== globalMem_busDevice_release() end ===" );
 }
 
+struct device * globalMem_busDevice;
 #if 0
 /* 用户自定义总线所对应的device对象，作为本总线下所有设备的父设备 */
 struct device globalMem_busDevice = {
@@ -188,13 +191,17 @@ static ssize_t globalMem_busDevice_attr_store( struct device *dev, struct device
 static DEVICE_ATTR( globalMem_busDevice_attr, (S_IRUGO|S_IWUSR|S_IWGRP), globalMem_busDevice_attr_show, globalMem_busDevice_attr_store );
 
 int __init globalMem_bus_init( unsigned int cdevMajor ){
+    
+    dev_t devNo;
     int ret;
     
     printk( "******* globalMem_bus_init() start *******\n" );
 
     ret = bus_register( &globalMem_bus );
-    if( ret )
+    if( ret ){
+        printk( "bus_register() failed: %d\n", ret );
         return ret;
+    }
     
     if( bus_create_file( &globalMem_bus, &bus_attr_globalMem_bus_author ) )
         printk( "Unable to create globalMem_bus author attribute file\n" );
@@ -205,7 +212,16 @@ int __init globalMem_bus_init( unsigned int cdevMajor ){
 
     printk( "globamMem_bus register success!\n" );
     
-    device_create( NULL, NULL, MKDEV(cdevMajor, 0), NULL, "globalMem_busDevice" );
+    globalMem_class = class_create( THIS_MODULE, "globalMem_class" );
+    
+    devNo = MKDEV( cdevMajor, 0 );
+    globalMem_busDevice = device_create( globalMem_class, NULL, devNo, NULL, "globalMem_busDevice" );
+    if( IS_ERR(globalMem_busDevice) ){
+        printk( "device_create() failed: %ld\n", PTR_ERR(globalMem_busDevice) );
+        printk( "devNo is: %u\n", devNo );
+        printk( "Major is: %u\n", MAJOR( devNo ) );
+        return -1;
+    }
     
     //if( device_register( &globalMem_busDevice ) )
     //    printk( "register globalMem_busDevice fail!\n" );
@@ -213,7 +229,9 @@ int __init globalMem_bus_init( unsigned int cdevMajor ){
     //if( device_create_file( &globalMem_busDevice, &dev_attr_globalMem_busDevice_attr ) )
     //    printk( "Unable to create globalMem_busDevice attribute file\n" );
 
-    //globalMem_bus.dev_root = &globalMem_busDevice;  
+    printk( "Major is: %u\n", MAJOR(globalMem_busDevice->devt) );
+    printk( "Minor is: %u\n", MINOR(globalMem_busDevice->devt) );
+    globalMem_bus.dev_root = globalMem_busDevice;  
     /*
                 * 在注册完总线device对象后，将其所属总线的bus_type->dev_root字段指向该device对象。
                 * 注意，若设置了总线bus对象的dev_root字段，则在调用bus_unregister()注销该总线过程中，
@@ -232,6 +250,7 @@ void __exit globalMem_bus_exit( void ){
     printk( "******* globalMem_bus_exit() start *******\n" );
     //device_unregister( &globalMem_busDevice );
     bus_unregister( &globalMem_bus );
+    class_destroy( globalMem_class );
     printk( "******* globalMem_bus_exit() end *******\n" );
 }
 EXPORT_SYMBOL( globalMem_bus_exit );
