@@ -5,15 +5,14 @@
 #include <linux/string.h>
 #include <linux/uaccess.h>
 
+#include "cdev_bus.h"
+
 MODULE_AUTHOR( "faye" );
 MODULE_LICENSE( "GPL" );
 
-extern int __init globalMem_bus_init( unsigned int cdevMajor );
-extern void __exit globalMem_bus_exit( void );
-
 unsigned int  offset_read;   /* 设备文件读偏移量 */
 unsigned int  offset_write;  /* 设备文件写偏移量 */
-char gBuf[ 100 ];            /* 设备文件内存缓冲区 */
+char gBuf[ 100 ];            /* 字符设备文件内存缓冲区 */
 unsigned int cdevMajor;
 
 static ssize_t  globalVar_read( struct file*, char* __user, size_t, loff_t* );
