@@ -169,8 +169,8 @@ void globalMem_busDevice_release( struct device *dev ){
     printk( "=== globalMem_busDevice_release() end ===" );
 }
 
-struct device * globalMem_busDevice;
-#if 0
+//struct device * globalMem_busDevice;
+#if 1
 /* 用户自定义总线所对应的device对象，作为本总线下所有设备的父设备 */
 struct device globalMem_busDevice = {
     .init_name  = "globalMem_busDevice",
@@ -192,7 +192,7 @@ static DEVICE_ATTR( globalMem_busDevice_attr, (S_IRUGO|S_IWUSR|S_IWGRP), globalM
 
 int __init globalMem_bus_init( unsigned int cdevMajor ){
     
-    dev_t devNo;
+    //dev_t devNo;
     int ret;
     
     printk( "******* globalMem_bus_init() start *******\n" );
@@ -211,7 +211,8 @@ int __init globalMem_bus_init( unsigned int cdevMajor ){
     bus_add_groups( &globalMem_bus, ( const struct attribute_group*[] ){ &globalMem_bus_attrGroup_set, NULL } );
 
     printk( "globamMem_bus register success!\n" );
-    
+
+#if 0
     globalMem_class = class_create( THIS_MODULE, "globalMem_class" );
     
     devNo = MKDEV( cdevMajor, 0 );
@@ -222,17 +223,20 @@ int __init globalMem_bus_init( unsigned int cdevMajor ){
         printk( "Major is: %u\n", MAJOR( devNo ) );
         return -1;
     }
-    
-    //if( device_register( &globalMem_busDevice ) )
-    //    printk( "register globalMem_busDevice fail!\n" );
+#endif
 
-    //if( device_create_file( &globalMem_busDevice, &dev_attr_globalMem_busDevice_attr ) )
-    //    printk( "Unable to create globalMem_busDevice attribute file\n" );
+    globalMem_busDevice.devt = MKDEV( cdevMajor, 0 );
 
-    printk( "Major is: %u\n", MAJOR(globalMem_busDevice->devt) );
-    printk( "Minor is: %u\n", MINOR(globalMem_busDevice->devt) );
-    globalMem_bus.dev_root = globalMem_busDevice;  
-    /*
+    if( device_register( &globalMem_busDevice ) )
+        printk( "register globalMem_busDevice fail!\n" );
+
+    if( device_create_file( &globalMem_busDevice, &dev_attr_globalMem_busDevice_attr ) )
+        printk( "Unable to create globalMem_busDevice attribute file\n" );
+
+    printk( "Major is: %u\n", MAJOR(globalMem_busDevice.devt) );
+    printk( "Minor is: %u\n", MINOR(globalMem_busDevice.devt) );
+
+    globalMem_bus.dev_root = &globalMem_busDevice; /*
                 * 在注册完总线device对象后，将其所属总线的bus_type->dev_root字段指向该device对象。
                 * 注意，若设置了总线bus对象的dev_root字段，则在调用bus_unregister()注销该总线过程中，
                 * 会自动调用device_unregister()函数注销dev_root字段所指向的device对象。
@@ -250,7 +254,7 @@ void __exit globalMem_bus_exit( void ){
     printk( "******* globalMem_bus_exit() start *******\n" );
     //device_unregister( &globalMem_busDevice );
     bus_unregister( &globalMem_bus );
-    class_destroy( globalMem_class );
+    //class_destroy( globalMem_class );
     printk( "******* globalMem_bus_exit() end *******\n" );
 }
 EXPORT_SYMBOL( globalMem_bus_exit );

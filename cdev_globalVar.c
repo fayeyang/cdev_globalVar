@@ -141,6 +141,8 @@ static int __init globalVar_init( void ){
     printk( "cdevMajor is %d\n", cdevMajor );
     printk( "minor is %d\n", MINOR(cdevNo) );
 */
+    printk( "======= globalVar_init() start =======\n" );
+    
     memset( gBuf, 0, sizeof(gBuf) );
     strcpy( gBuf, "hello faye\n" );
     
@@ -153,16 +155,21 @@ static int __init globalVar_init( void ){
     globalMem_bus_init( cdevMajor );
     
     printk( "register chrdev success! cdevMajor is:%+d\n", cdevMajor );
+    printk( "======= globalVar_init() end =======\n" );
     return 0;
 }
 module_init( globalVar_init );
 
 static void __exit globalVar_exit( void ){
     
+    printk( "======= globalVar_exit() start =======\n" );
+    
     globalMem_bus_exit();
     
     unregister_chrdev( cdevMajor, "globalVar" );
     printk( "globalVar exit!\n" );
+    
+    printk( "======= globalVar_exit() end =======\n" );
 }
 module_exit( globalVar_exit );
 
