@@ -140,7 +140,7 @@ static ssize_t globalMem_bus_attrGroup_store( struct bus_type *bus, const char *
 static BUS_ATTR( globalMem_bus_attrGroup, (S_IRUGO|S_IWUSR|S_IWGRP), globalMem_bus_attrGroup_show, globalMem_bus_attrGroup_store );
 
 /* 定义一个attribute_group对象，并将其.attrs字段赋值为bus_attr_globalMem_bus_attrGroup.attr字段 */
-const struct attribute_group  globalMem_bus_attrGroup_set = {
+struct attribute_group  globalMem_bus_attrGroup_set = {
     .name  = "globalMem_bus_attrGroup_name",
     .attrs = (struct attribute*[]){ &(bus_attr_globalMem_bus_attrGroup.attr), NULL },
 };
