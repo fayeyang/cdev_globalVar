@@ -6,14 +6,15 @@
 #include <linux/uaccess.h>
 
 #include "cdev_bus.h"
+#include "cdev_device.h"
 
 MODULE_AUTHOR( "faye" );
 MODULE_LICENSE( "GPL" );
 
 unsigned int  offset_read;   /* 设备文件读偏移量 */
 unsigned int  offset_write;  /* 设备文件写偏移量 */
-char gBuf[ 100 ];            /* 字符设备文件内存缓冲区 */
-unsigned int cdevMajor;
+char gBuf[ 100 ];            /* 本字符设备文件的内存缓冲区 */
+unsigned int cdevMajor;      /* 本字符设备文件的主设备号 */
 
 static ssize_t  globalVar_read( struct file*, char* __user, size_t, loff_t* );
 static ssize_t  globalVar_write( struct file*, const char* __user, size_t, loff_t* );
@@ -150,10 +151,10 @@ static int __init globalVar_init( void ){
         printk( "register chrdev failure! ret = %+d\n", cdevMajor );
         return cdevMajor;
     }
-    
-    globalMem_bus_init( cdevMajor );
-    
     printk( "register chrdev success! cdevMajor is:%+d\n", cdevMajor );
+
+    globalMem_device_init( cdevMajor );
+    
     printk( "======= globalVar_init() end =======\n" );
     return 0;
 }
@@ -163,7 +164,8 @@ static void __exit globalVar_exit( void ){
     
     printk( "======= globalVar_exit() start =======\n" );
     
-    globalMem_bus_exit();
+    globalMem_device_exit( cdevMajor );
+    printk( "globalMem exit!\n" );
     
     unregister_chrdev( cdevMajor, "globalVar" );
     printk( "globalVar exit!\n" );

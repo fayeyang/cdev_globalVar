@@ -10,6 +10,10 @@ MODULE_LICENSE( "GPL" );  /*
     * 注意,本行不可省略,否则即使能成功编译,但在加载本模块时,
     * 会提示"Unknown symbol in module",并会在dmesg命令中给出所缺少的符号 */
 
+struct class  * globalMem_class;
+struct device * globalMem_device_0;
+struct device * globalMem_device_1;
+
 char globalMem_device_attr[ PAGE_SIZE ]      = "globalMem_device_attr";
 char globalMem_device_attrGroup[ PAGE_SIZE ] = "globalMem_device_attrGroup";
 
@@ -21,6 +25,14 @@ void globalMem_device_release( struct device *dev ){
     printk( "####### globalMem_device_release() start #######\n" );
     printk( "device is: %s\n", dev_name(dev) );
     printk( "####### globalMem_device_release() end #######\n" );
+}
+
+/* struct class.dev_uevent函数指针会指向本函数，当在本class下添加设备device对象时，会调用本函数 */
+int globalMem_class_uevent( struct device *dev, struct kobj_uevent_env *env ){
+    printk( "=== globalMem_class_uevent() start ===" );
+    printk( "device is: %s\n", dev_name(dev) );
+    printk( "=== globalMem_class_uevent() end ===" );
+    return 0;
 }
 
 int device_add_groups( struct device *dev, const struct attribute_group **groups ){
@@ -61,11 +73,7 @@ static DEVICE_ATTR( globalMem_device_attr, (S_IRUGO|S_IWUSR|S_IWGRP), globalMem_
 int __init globalMem_device_init( unsigned int cdevMajor ){
     
     int ret;
-    
-    struct class  * globalMem_class;
-    struct device * globalMem_device_0;
-    struct device * globalMem_device_1;
-    
+
     printk( "======= globalMem_device_init() start =======\n" );
     
     globalMem_class = class_create( THIS_MODULE, "globalMem_class" );
@@ -73,7 +81,9 @@ int __init globalMem_device_init( unsigned int cdevMajor ){
         printk( "class_create() failed: %ld\n", PTR_ERR(globalMem_class) );
         return -1;
     }
+    globalMem_class->dev_uevent  = globalMem_class_uevent;
     globalMem_class->dev_release = globalMem_device_release;
+    printk( "create globalMem_class success!\n" );
     
     globalMem_device_0 = device_create( globalMem_class, NULL, MKDEV(cdevMajor,0), NULL, "globalMem_device_0" );
     if( IS_ERR( globalMem_device_0 ) ){
@@ -93,6 +103,8 @@ int __init globalMem_device_init( unsigned int cdevMajor ){
         return ret;
     }
     
+    printk( "create globalMem_device_0 success!\n" );
+    
     globalMem_device_1 = device_create( globalMem_class, NULL, MKDEV(cdevMajor,1), NULL, "globalMem_device_1" );
     if( IS_ERR( globalMem_device_1 ) ){
         printk( "device_create() failed: %ld\n", PTR_ERR(globalMem_device_1) );
@@ -110,16 +122,23 @@ int __init globalMem_device_init( unsigned int cdevMajor ){
         return -1;
     }
     
+    printk( "create globalMem_device_1 success!\n" );
+    
     printk( "======= globalMem_device_init() end =======\n" );
     return 0;
 }
 EXPORT_SYMBOL( globalMem_device_init );
 
-void globalmem_device_exit( void ){
+void globalMem_device_exit( unsigned int cdevMajor ){
+    
     printk( "======= globalMem_device_exit() start =======\n" );
-    device_destroy();
+    
+    device_destroy( globalMem_class, MKDEV(cdevMajor, 0) );
+    device_destroy( globalMem_class, MKDEV(cdevMajor, 1) );
+    
+    class_destroy( globalMem_class );
     
     printk( "======= globalMem_device_exit() end =======\n" );
 }
-EXPORT_SYMBOL( globalmem_device_exit );
+EXPORT_SYMBOL( globalMem_device_exit );
 

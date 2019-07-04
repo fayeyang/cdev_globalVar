@@ -9,7 +9,7 @@ MODULE_LICENSE( "GPL" );  /*
     * 注意,本行不可省略,否则即使能成功编译,但在加载本模块时,
     * 会提示"Unknown symbol in module",并会在dmesg命令中给出所缺少的符号 */
 
-struct class * globalMem_class;
+//struct class * globalMem_class;
 
 #if 1
 /*
@@ -58,7 +58,7 @@ static int globalMem_bus_match( struct device *dev, struct device_driver *drv ){
 }
 
 /* struct bus_type->uevent()函数指针会指向本函数，当在本总线下添加设备device对象时，会调用本函数 */
-static int globalMem_bus_uevent( struct device *dev, struct kobj_uevent_env *env ){
+int globalMem_bus_uevent( struct device *dev, struct kobj_uevent_env *env ){
     printk( "=== globalMem_bus_uevent() start ===" );
     printk( "device is: %s\n", dev_name(dev) );
     printk( "=== globalMem_bus_uevent() end ===" );
@@ -258,7 +258,4 @@ void __exit globalMem_bus_exit( void ){
     printk( "******* globalMem_bus_exit() end *******\n" );
 }
 EXPORT_SYMBOL( globalMem_bus_exit );
-
-//module_init( globalMem_bus_init );
-//module_exit( globalMem_bus_exit );
 
