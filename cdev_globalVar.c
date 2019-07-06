@@ -7,6 +7,7 @@
 
 #include "cdev_bus.h"
 #include "cdev_device.h"
+#include "cdev_driver.h"
 
 MODULE_AUTHOR( "faye" );
 MODULE_LICENSE( "GPL" );
@@ -154,6 +155,10 @@ static int __init globalVar_init( void ){
     printk( "register chrdev success! cdevMajor is:%+d\n", cdevMajor );
 
     globalMem_device_init( cdevMajor );
+    printk( "register globalMem_device success!\n" );
+    
+    globalMem_driver_init();
+    printk( "register globalMem_driver success!\n" );
     
     printk( "======= globalVar_init() end =======\n" );
     return 0;
@@ -164,8 +169,11 @@ static void __exit globalVar_exit( void ){
     
     printk( "======= globalVar_exit() start =======\n" );
     
+    globalMem_driver_exit();
+    printk( "globalMem_driver exit!\n" );
+    
     globalMem_device_exit( cdevMajor );
-    printk( "globalMem exit!\n" );
+    printk( "globalMem_device exit!\n" );
     
     unregister_chrdev( cdevMajor, "globalVar" );
     printk( "globalVar exit!\n" );
