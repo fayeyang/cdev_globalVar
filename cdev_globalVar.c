@@ -154,6 +154,8 @@ static int __init globalVar_init( void ){
     }
     printk( "register chrdev success! cdevMajor is:%+d\n", cdevMajor );
 
+    globalMem_bus_init( 0 );
+
     globalMem_device_init( cdevMajor );
     printk( "register globalMem_device success!\n" );
     

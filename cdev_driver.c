@@ -5,6 +5,8 @@
 #include  <linux/device.h>
 #include  <linux/sysfs.h>
 
+#include "cdev_bus.h"
+
 MODULE_AUTHOR( "faye" );
 MODULE_LICENSE( "GPL" );  /*
     * 注意,本行不可省略,否则即使能成功编译,但在加载本模块时,
@@ -85,9 +87,10 @@ struct attribute_group globalMem_driver_attrGroup_set = {
 
 struct device_driver globalMem_driver = {
     .name     = "globalMem_driver",
-    .probe    = globalMem_driver_probe,
-    .remove   = globalMem_driver_remove,
-    .shutdown = globalMem_driver_shutdown,
+    .bus      = &globalMem_bus,
+    .probe    =  globalMem_driver_probe,
+    .remove   =  globalMem_driver_remove,
+    .shutdown =  globalMem_driver_shutdown,
 };
 
 int __init globalMem_driver_init( void ){

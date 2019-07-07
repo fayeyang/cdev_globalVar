@@ -225,6 +225,7 @@ int __init globalMem_bus_init( unsigned int cdevMajor ){
     }
 #endif
 
+#if 0
     globalMem_busDevice.devt = MKDEV( cdevMajor, 0 );
 
     if( device_register( &globalMem_busDevice ) )
@@ -244,6 +245,8 @@ int __init globalMem_bus_init( unsigned int cdevMajor ){
                 * 无需调用device_unregister()函数注销dev_root字段所指向的device对象。 */
 
     printk( "globalMem_busDevice register success!\n" );
+#endif
+
     printk( "******* globalMem_bus_init() end *******\n" );
     
     return ret;
