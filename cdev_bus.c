@@ -225,8 +225,8 @@ int __init globalMem_bus_init( unsigned int cdevMajor ){
     }
 #endif
 
-#if 0
-    globalMem_busDevice.devt = MKDEV( cdevMajor, 0 );
+#if 1
+    //globalMem_busDevice.devt = MKDEV( cdevMajor, 0 );
 
     if( device_register( &globalMem_busDevice ) )
         printk( "register globalMem_busDevice fail!\n" );

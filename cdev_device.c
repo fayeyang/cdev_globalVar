@@ -5,6 +5,8 @@
 #include  <linux/device.h>
 #include  <linux/sysfs.h>
 
+#include  "cdev_bus.h"
+
 MODULE_AUTHOR( "faye" );
 MODULE_LICENSE( "GPL" );  /*
     * 注意,本行不可省略,否则即使能成功编译,但在加载本模块时,
@@ -85,7 +87,7 @@ int __init globalMem_device_init( unsigned int cdevMajor ){
     globalMem_class->dev_release = globalMem_device_release;
     printk( "create globalMem_class success!\n" );
     
-    globalMem_device_0 = device_create( globalMem_class, NULL, MKDEV(cdevMajor,0), NULL, "globalMem_device_0" );
+    globalMem_device_0 = device_create( globalMem_class, &globalMem_busDevice, MKDEV(cdevMajor,0), NULL, "globalMem_device_0" );
     if( IS_ERR( globalMem_device_0 ) ){
         printk( "device_create() failed: %ld\n", PTR_ERR(globalMem_device_0) );
         return -1;
@@ -105,7 +107,7 @@ int __init globalMem_device_init( unsigned int cdevMajor ){
     
     printk( "create globalMem_device_0 success!\n" );
     
-    globalMem_device_1 = device_create( globalMem_class, NULL, MKDEV(cdevMajor,1), NULL, "globalMem_device_1" );
+    globalMem_device_1 = device_create( globalMem_class, &globalMem_busDevice, MKDEV(cdevMajor,1), NULL, "globalMem_device_1" );
     if( IS_ERR( globalMem_device_1 ) ){
         printk( "device_create() failed: %ld\n", PTR_ERR(globalMem_device_1) );
         return -1;
