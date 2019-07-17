@@ -50,18 +50,18 @@ char globalMem_busDev_attr[ PAGE_SIZE ]   = "globalMem busDev attr";
  * 匹配成功，此时会调用bus_type->probe()方法；若本函数返回值为0，则表示匹配失败。
  */
 static int globalMem_bus_match( struct device *dev, struct device_driver *drv ){
-    printk( "=== globalMem_bus_match() start === " );
+    printk( "=== globalMem_bus_match() start ===\n" );
     printk( "device is: %s\n", dev_name(dev) );
     printk( "device_driver is: %s\n", drv->name );
-    printk( "=== globalMem_bus_match() end ===" );
+    printk( "=== globalMem_bus_match() end ===\n" );
     return !strncmp( dev_name(dev), drv->name, strlen(drv->name) );
 }
 
 /* struct bus_type->uevent()函数指针会指向本函数，当在本总线下添加设备device对象时，会调用本函数 */
 int globalMem_bus_uevent( struct device *dev, struct kobj_uevent_env *env ){
-    printk( "=== globalMem_bus_uevent() start ===" );
+    printk( "=== globalMem_bus_uevent() start ===\n" );
     printk( "device is: %s\n", dev_name(dev) );
-    printk( "=== globalMem_bus_uevent() end ===" );
+    printk( "=== globalMem_bus_uevent() end ===\n" );
     return 0;
 }
 
@@ -70,9 +70,9 @@ int globalMem_bus_uevent( struct device *dev, struct kobj_uevent_env *env ){
  * （bus_type->match()返回值非0），则会调用bus_type->probe()函数
  */
 static int globalMem_bus_probe( struct device *dev ){
-    printk( "=== globalMem_bus_probe() start ===" );
+    printk( "=== globalMem_bus_probe() start ===\n" );
     printk( "device is: %s\n", dev_name(dev) );
-    printk( "=== globalMem_bus_probe() end ===" );
+    printk( "=== globalMem_bus_probe() end ===\n" );
     return 0;
 }
 
@@ -82,16 +82,16 @@ static int globalMem_bus_probe( struct device *dev ){
  * 在移除本总线下未匹配的设备模块或驱动模块时，不会调用本函数。
  */
 static int globalMem_bus_remove( struct device *dev ){
-    printk( "=== globalMem_bus_remove() start ===" );
+    printk( "=== globalMem_bus_remove() start ===\n" );
     printk( "device is: %s\n", dev_name(dev) );
-    printk( "=== globalMem_bus_remove() end ===" );
+    printk( "=== globalMem_bus_remove() end ===\n" );
     return 0;
 }
 
 static void globalMem_bus_shutdown( struct device *dev ){
-    printk( "=== globalMem_bus_shutdown() start ===" );
+    printk( "=== globalMem_bus_shutdown() start ===\n" );
     printk( "device is: %s\n", dev_name(dev) );
-    printk( "=== globalMem_bus_shutdown() end ===" );
+    printk( "=== globalMem_bus_shutdown() end ===\n" );
 }
 
 /* 定义一个总线属性对象 */
@@ -146,7 +146,7 @@ struct attribute_group  globalMem_bus_attrGroup_set = {
 };
 
 struct bus_type globalMem_bus = {
-    .name       = "globalMem",
+    .name       = "globalMem_bus",
     .match      =  globalMem_bus_match,
     .uevent     =  globalMem_bus_uevent,
     .shutdown   =  globalMem_bus_shutdown,
@@ -166,7 +166,7 @@ EXPORT_SYMBOL( globalMem_bus );
 void globalMem_busDevice_release( struct device *dev ){
     printk( "=== globalMem_busDevice_release() start ===\n" );
     printk( "device is: %s\n", dev_name(dev) );
-    printk( "=== globalMem_busDevice_release() end ===" );
+    printk( "=== globalMem_busDevice_release() end ===\n" );
 }
 
 //struct device * globalMem_busDevice;

@@ -31,9 +31,9 @@ void globalMem_device_release( struct device *dev ){
 
 /* struct class.dev_uevent函数指针会指向本函数，当在本class下添加设备device对象时，会调用本函数 */
 int globalMem_class_uevent( struct device *dev, struct kobj_uevent_env *env ){
-    printk( "=== globalMem_class_uevent() start ===" );
+    printk( "=== globalMem_class_uevent() start ===\n" );
     printk( "device is: %s\n", dev_name(dev) );
-    printk( "=== globalMem_class_uevent() end ===" );
+    printk( "=== globalMem_class_uevent() end ===\n" );
     return 0;
 }
 

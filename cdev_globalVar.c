@@ -177,6 +177,9 @@ static void __exit globalVar_exit( void ){
     globalMem_device_exit( cdevMajor );
     printk( "globalMem_device exit!\n" );
     
+    globalMem_bus_exit();
+    printk( "globalMem_bus exit!\n" );
+    
     unregister_chrdev( cdevMajor, "globalVar" );
     printk( "globalVar exit!\n" );
     

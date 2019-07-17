@@ -81,7 +81,7 @@ static ssize_t globalMem_driver_attrGroup_store( struct device_driver *drv, cons
 static DRIVER_ATTR_RW( globalMem_driver_attrGroup );
 
 struct attribute_group globalMem_driver_attrGroup_set = {
-    .name = "globalMem_driver_attrGroup_set",
+    .name  = "globalMem_driver_attrGroup_set",
     .attrs = (struct attribute*[]){ &(driver_attr_globalMem_driver_attrGroup.attr), NULL },
 };
 
