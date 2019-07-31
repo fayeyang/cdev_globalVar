@@ -17,6 +17,7 @@ unsigned int  offset_write;  /* 设备文件写偏移量 */
 char gBuf[ 100 ];            /* 本字符设备文件的内存缓冲区 */
 unsigned int cdevMajor;      /* 本字符设备文件的主设备号 */
 
+loff_t globalVar_llseek( struct file*, loff_t, int );
 static ssize_t  globalVar_read( struct file*, char* __user, size_t, loff_t* );
 static ssize_t  globalVar_write( struct file*, const char* __user, size_t, loff_t* );
 static long     globalVar_ioctl( struct file*, unsigned int, unsigned long );
@@ -25,6 +26,7 @@ static int      globalVar_release( struct inode*, struct file* );
 
 struct file_operations globalVar_fops = {
     owner:             THIS_MODULE,
+    llseek:            globalVar_llseek,
     read:              globalVar_read,
     write:             globalVar_write,
     unlocked_ioctl:    globalVar_ioctl,
@@ -32,11 +34,21 @@ struct file_operations globalVar_fops = {
     release:           globalVar_release,
 };
 
+loff_t globalVar_llseek( struct file* filp, loff_t offset, int whence ){
+    printk( "in globalVar_llseek() func:\n" );
+    return 0;
+}
+
 static long globalVar_ioctl( struct file* filp, unsigned int cmd, unsigned long arg ){
     printk( "in globalVar_ioctl func:\n" );
     switch( cmd ){
+    case 0:
+        printk( "set offset_read to %lu\n", arg );
+        offset_read = arg;
+        break;
     case 1:
-        printk( "in globalVar_ioctl: CMD NO: 1\n" );
+        printk( "set offset_write to %lu\n", arg );
+        offset_write = arg;
         break;
     default:
         printk( "in globalVar_ioctl: bad cmd:%u\n", cmd );
