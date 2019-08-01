@@ -35,12 +35,12 @@ struct file_operations globalVar_fops = {
 };
 
 loff_t globalVar_llseek( struct file* filp, loff_t offset, int whence ){
-    printk( "in globalVar_llseek() func:\n" );
+    printk( "call globalVar_llseek() func:\n" );
     return 0;
 }
 
 static long globalVar_ioctl( struct file* filp, unsigned int cmd, unsigned long arg ){
-    printk( "in globalVar_ioctl func:\n" );
+    printk( "======= globalVar_ioctl() start =======\n" );
     switch( cmd ){
     case 0:
         printk( "set offset_read to %lu\n", arg );
@@ -53,12 +53,13 @@ static long globalVar_ioctl( struct file* filp, unsigned int cmd, unsigned long 
     default:
         printk( "in globalVar_ioctl: bad cmd:%u\n", cmd );
     }
+    printk( "======= globalVar_ioctl() end =======\n" );
     return 0;
 }
 
 static int globalVar_open( struct inode* inodp, struct file* filp ){
 
-    printk( "in globalVar_open func: get this module\n" );
+    printk( "======= call globalVar_open(), get this module =======\n" );
     if( !try_module_get(THIS_MODULE) ){
         printk( "Could not reserve module\n" );
         return -1;
@@ -71,7 +72,7 @@ static int globalVar_open( struct inode* inodp, struct file* filp ){
 }
 
 static int globalVar_release( struct inode* inodp, struct file* filp ){
-    printk( "in globalVar_release func: put this module\n" );
+    printk( "======= call globalVar_release(), put this module =======\n" );
     module_put( THIS_MODULE );
 
     return 0;
@@ -111,7 +112,7 @@ static ssize_t globalVar_write( struct file* filp, const char* __user buf, size_
 
 	unsigned int slen;
 
-	printk( "+++++++ call globalVar_write func, len = %lu +++++++\n", len );
+	printk( "======= call globalVar_write func, len = %lu =======\n", len );
     printk( "offset arg   is: %lli\n", *offset );
     printk( "file->offset is: %lli\n",  filp->f_pos );
     printk( "private data is: %s\n", (char*)filp->private_data );

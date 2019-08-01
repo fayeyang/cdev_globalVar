@@ -22,13 +22,12 @@ int main( int argc, char argv[] ){
     read( fd, cBuf, sizeof(cBuf) );
     printf( "in /dev/globalMem_device_0:\n%s\n", cBuf );
 
-    ioctl( fd, 0, 0 );
-
     memset( cBuf, 0, sizeof(cBuf) );
     printf( "please input your string:\n" );
     scanf( "%s", cBuf );
     write( fd, cBuf, (strlen(cBuf)) );
 
+    ioctl( fd, 0, 0 );
     memset( cBuf, 0, sizeof(cBuf) );
     read( fd, cBuf, sizeof(cBuf) );
     printf( "in /dev/globalMem_device_0:\n%s\n", cBuf );
