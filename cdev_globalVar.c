@@ -10,10 +10,13 @@
 #include "cdev_driver.h"
 
 MODULE_AUTHOR( "faye" );
-MODULE_LICENSE( "GPL" );
+MODULE_LICENSE( "GPL" );  /*
+    * 注意,本行不可省略,否则即使能成功编译,但在加载本模块时,
+    * 会提示"Unknown symbol in module",并会在dmesg命令中给出所缺少的符号 */
 
-unsigned int  offset_read;   /* 设备文件读偏移量 */
-unsigned int  offset_write;  /* 设备文件写偏移量 */
+
+unsigned int  offset_read;   /* 设备文件当前读偏移量 */
+unsigned int  offset_write;  /* 设备文件当前写偏移量 */
 char gBuf[ 100 ];            /* 本字符设备文件的内存缓冲区 */
 unsigned int cdevMajor;      /* 本字符设备文件的主设备号 */
 
@@ -39,14 +42,15 @@ loff_t globalVar_llseek( struct file* filp, loff_t offset, int whence ){
     return 0;
 }
 
+/* 用户空间的ioctl()方法最终会调用本函数 */
 static long globalVar_ioctl( struct file* filp, unsigned int cmd, unsigned long arg ){
     printk( "======= globalVar_ioctl() start =======\n" );
     switch( cmd ){
-    case 0:
+    case 0:  /* 设置全局的读偏移量指针offset_read */
         printk( "set offset_read to %lu\n", arg );
         offset_read = arg;
         break;
-    case 1:
+    case 1:  /* 设置全局的写偏移量指针offset_write */
         printk( "set offset_write to %lu\n", arg );
         offset_write = arg;
         break;
@@ -57,6 +61,7 @@ static long globalVar_ioctl( struct file* filp, unsigned int cmd, unsigned long 
     return 0;
 }
 
+/* 在双击打开设备文件或open()系统调用中，会调用本函数 */
 static int globalVar_open( struct inode* inodp, struct file* filp ){
 
     printk( "======= call globalVar_open(), get this module =======\n" );
@@ -71,6 +76,7 @@ static int globalVar_open( struct inode* inodp, struct file* filp ){
     return 0;
 }
 
+/* 在关闭设备文件或close()系统调用中，会调用本函数 */
 static int globalVar_release( struct inode* inodp, struct file* filp ){
     printk( "======= call globalVar_release(), put this module =======\n" );
     module_put( THIS_MODULE );
@@ -78,6 +84,10 @@ static int globalVar_release( struct inode* inodp, struct file* filp ){
     return 0;
 }
 
+/*
+ * 在使用编辑器编辑设备文件，或read()系统调用中，会调用本函数
+ * 若本函数返回值为0，则表示已无数据可读，应用程序（比如cat命令或sublime文本编辑器等）不会再次调用本函数
+ * 若本函数返回值非0，则表示可能还有数据待读，应用程序可能会再次调用本函数 */
 static ssize_t globalVar_read( struct file* filp, char* __user buf, size_t len, loff_t* offset ){
 
 	unsigned int slen;
@@ -90,8 +100,10 @@ static ssize_t globalVar_read( struct file* filp, char* __user buf, size_t len, 
 
     slen = strlen( gBuf );  /* strlen()函数会返回缓冲区中字符串的长度，不包含该字符串末尾的null结束符 */
     slen++;                 /* 缓冲区中字符串长度需包含末尾的null结束符 */
+    
+    /* 若当前读写位置offset_read大于等于缓冲区字符串总长度，则表示已读到末尾 */
     if( offset_read >= slen )
-    	return 0;  /* 当读函数返回0时,表示已无数据可读,应用程序不会再次调用本函数,否则应用程序会再次调用本函数 */
+    	return 0;  /* 当读函数返回0时,表示已无数据可读,应用程序(比如文本编辑器等)不会再次调用本函数,否则应用程序会再次调用本函数 */
 
     slen = slen - offset_read;
     
@@ -108,6 +120,11 @@ static ssize_t globalVar_read( struct file* filp, char* __user buf, size_t len, 
             * 若返回值为0,则表示已无数据可读,应用程序不会再次调用本函数 */
 }
 
+/*
+ * 在使用编辑器编辑设备文件，或write()系统调用中，会调用本函数
+ * 若返回值不等于传入的len实参，则表示还有数据待写入，应用程序（比如echo命令或sublime
+ * 编辑器等）会再次调用本函数；若返回值等于传入的len实参，则表示数据写入完毕，
+ * 应用程序不会再次调用本函数。 */
 static ssize_t globalVar_write( struct file* filp, const char* __user buf, size_t len, loff_t* offset ){
 
 	unsigned int slen;
