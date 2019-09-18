@@ -124,6 +124,7 @@ int __init globalMem_driver_init( void ){
     
     return 0;
 }
+EXPORT_SYMBOL( globalMem_driver_init );
 
 void __exit globalMem_driver_exit( void ){
     printk( "======= globalMem_driver_exit() start =======\n" );
@@ -133,3 +134,4 @@ void __exit globalMem_driver_exit( void ){
     printk( "globalMem_driver unregistered!\n" );
     printk( "======= globalMem_driver_end() end =======\n" );
 }
+EXPORT_SYMBOL( globalMem_driver_exit );

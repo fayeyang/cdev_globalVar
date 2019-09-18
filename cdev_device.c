@@ -131,7 +131,7 @@ int __init globalMem_device_init( unsigned int cdevMajor ){
 }
 EXPORT_SYMBOL( globalMem_device_init );
 
-void globalMem_device_exit( unsigned int cdevMajor ){
+void __exit globalMem_device_exit( unsigned int cdevMajor ){
     
     printk( "======= globalMem_device_exit() start =======\n" );
     
