@@ -86,7 +86,7 @@ struct attribute_group globalMem_driver_attrGroup_set = {
 };
 
 struct device_driver globalMem_driver = {
-    .name     = "globalMem_busDevice",
+    .name     = "globalMem_device",
     .bus      = &globalMem_bus,
     .probe    =  globalMem_driver_probe,
     .remove   =  globalMem_driver_remove,

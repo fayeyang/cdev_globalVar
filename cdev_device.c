@@ -72,6 +72,8 @@ static ssize_t globalMem_device_attr_store( struct device *dev, struct device_at
 
 static DEVICE_ATTR( globalMem_device_attr, (S_IRUGO|S_IWUSR|S_IWGRP), globalMem_device_attr_show, globalMem_device_attr_store );
 
+
+#if 0
 int __init globalMem_device_init( unsigned int cdevMajor ){
     
     int ret;
@@ -130,15 +132,52 @@ int __init globalMem_device_init( unsigned int cdevMajor ){
     return 0;
 }
 EXPORT_SYMBOL( globalMem_device_init );
+#endif
+
+#if 1
+struct device globalMem_device = {
+    .init_name  = "globalMem_device",
+    .bus        = &globalMem_bus,
+    .parent     = &globalMem_busDevice,
+    .release    =  globalMem_device_release,
+    .groups     = (const struct attribute_group*[] ){ &globalMem_device_attrGroup_set, NULL },
+};
+
+int __init globalMem_device_init( unsigned int cdevMajor ){
+    
+    int ret;
+    printk( "======= globalMem_device_init() start =======\n" );
+
+    globalMem_device.devt = MKDEV( cdevMajor, 0 );
+
+    ret = device_register( &globalMem_device );
+    if( ret ){
+        printk( KERN_DEBUG "Unable to register device\n" );
+        return ret;
+    }
+
+    ret = device_create_file( &globalMem_device, &dev_attr_globalMem_device_attr );
+    if( ret ){
+        printk( KERN_DEBUG "Unable to create device attribute file\n" );
+        return ret;
+    }
+
+    printk( KERN_DEBUG "globalMem_devie register success\n" );
+    printk( "======= globalMem_device_init() end =======\n" );
+    return 0;
+}
+#endif
 
 void __exit globalMem_device_exit( unsigned int cdevMajor ){
     
     printk( "======= globalMem_device_exit() start =======\n" );
     
-    device_destroy( globalMem_class, MKDEV(cdevMajor, 0) );
-    device_destroy( globalMem_class, MKDEV(cdevMajor, 1) );
+    device_unregister( &globalMem_device );
     
-    class_destroy( globalMem_class );
+    //device_destroy( globalMem_class, MKDEV(cdevMajor, 0) );
+    //device_destroy( globalMem_class, MKDEV(cdevMajor, 1) );
+    
+    //class_destroy( globalMem_class );
     
     printk( "======= globalMem_device_exit() end =======\n" );
 }
