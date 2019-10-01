@@ -21,8 +21,7 @@ char globalMem_device_attrGroup[ PAGE_SIZE ] = "globalMem_device_attrGroup";
 
 /*
  * globalMem_device.release函数指针会指向本函数.
- * 当device对象的引用计数减至0时，会在device_release()函数中调用dev->release()函数
- */
+ * 当device对象的引用计数减至0时，会在device_release()函数中调用dev->release()函数 */
 void globalMem_device_release( struct device *dev ){
     printk( "####### globalMem_device_release() start #######\n" );
     printk( "device is: %s\n", dev_name(dev) );

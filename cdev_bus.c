@@ -21,8 +21,7 @@ MODULE_LICENSE( "GPL" );  /*
  *      return sysfs_create_groups( &bus->p->subsys.kobj, groups );
  * subsys_private结构体定义在drivers/base/base.h文件中，但在ubuntu-16.04中未发现该
  * 头文件，因此也就无法通过include该头文件的方法来给出subsys_private结构体定义。
- * 是否还有更好的解决方法，尚待分析？？？？
- */
+ * 是否还有更好的解决方法，尚待分析？？？？ */
 struct subsys_private {
     struct kset subsys;
     struct kset *devices_kset;
@@ -47,8 +46,7 @@ char globalMem_busDev_attr[ PAGE_SIZE ]   = "globalMem busDev attr";
 /*
  * struct bus_type->match()函数指针会指向本函数。
  * 当向本bus下添加设备或驱动时会调用本函数进行匹配，若本函数返回值非0，则表示设备与驱动
- * 匹配成功，此时会调用bus_type->probe()方法；若本函数返回值为0，则表示匹配失败。
- */
+ * 匹配成功，此时会调用bus_type->probe()方法；若本函数返回值为0，则表示匹配失败。  */
 static int globalMem_bus_match( struct device *dev, struct device_driver *drv ){
     printk( "=== globalMem_bus_match() start ===\n" );
     printk( "device is: %s\n", dev_name(dev) );
@@ -67,8 +65,7 @@ int globalMem_bus_uevent( struct device *dev, struct kobj_uevent_env *env ){
 
 /*
  * struct bus_type->probe()函数指针会指向本函数。若所加载的设备与驱动匹配成功
- * （bus_type->match()返回值非0），则会调用bus_type->probe()函数
- */
+ * （bus_type->match()返回值非0），则会调用bus_type->probe()函数  */
 static int globalMem_bus_probe( struct device *dev ){
     printk( "=== globalMem_bus_probe() start ===\n" );
     printk( "device is: %s\n", dev_name(dev) );
@@ -79,8 +76,7 @@ static int globalMem_bus_probe( struct device *dev ){
 /*
  * struct bus_type->remove()函数指针会指向本函数。
  * 在移除本总线下已匹配的设备模块或驱动模块时，才会调用本函数
- * 在移除本总线下未匹配的设备模块或驱动模块时，不会调用本函数。
- */
+ * 在移除本总线下未匹配的设备模块或驱动模块时，不会调用本函数。 */
 static int globalMem_bus_remove( struct device *dev ){
     printk( "=== globalMem_bus_remove() start ===\n" );
     printk( "device is: %s\n", dev_name(dev) );
@@ -122,8 +118,7 @@ static BUS_ATTR( globalMem_bus_attr, (S_IRUGO|S_IWUSR|S_IWGRP), globalMem_bus_at
 
 /*
  * 由于内核中的bus_add_groups()函数未通过EXPORT_SYMBOL_GPL()导出，
- * 因此在用户模块文件中自行定义该函数。
- */
+ * 因此在用户模块文件中自行定义该函数。 */
 static int bus_add_groups( struct bus_type *bus, const struct attribute_group **groups ){
     return sysfs_create_groups( &bus->p->subsys.kobj, groups );
 }
@@ -161,8 +156,7 @@ EXPORT_SYMBOL( globalMem_bus );
 
 /*
  * struct globalMem__busDevice->release()函数指针会指向本函数
- * 当device对象的引用计数减至0时，会在device_release()函数中调用dev->release()函数
- */
+ * 当device对象的引用计数减至0时，会在device_release()函数中调用dev->release()函数  */
 void globalMem_busDevice_release( struct device *dev ){
     printk( "=== globalMem_busDevice_release() start ===\n" );
     printk( "device is: %s\n", dev_name(dev) );
