@@ -13,8 +13,7 @@ MODULE_LICENSE( "GPL" );  /*
     * 会提示"Unknown symbol in module",并会在dmesg命令中给出所缺少的符号 */
 
 struct class  * globalMem_class;
-struct device * globalMem_device_0;
-struct device * globalMem_device_1;
+struct device * globalMem_device_class;
 
 char globalMem_device_attr[ PAGE_SIZE ]      = "globalMem_device_attr";
 char globalMem_device_attrGroup[ PAGE_SIZE ] = "globalMem_device_attrGroup";
@@ -36,6 +35,7 @@ int globalMem_class_uevent( struct device *dev, struct kobj_uevent_env *env ){
     return 0;
 }
 
+/* 内核未导出device_add_groups()函数，在这里定义 */
 int device_add_groups( struct device *dev, const struct attribute_group **groups ){
     return sysfs_create_groups( &dev->kobj, groups );
 }
@@ -147,8 +147,36 @@ int __init globalMem_device_init( unsigned int cdevMajor ){
     int ret;
     printk( "======= globalMem_device_init() start =======\n" );
 
-    globalMem_device.devt = MKDEV( cdevMajor, 0 );
+    globalMem_class = class_create( THIS_MODULE, "globalMem_class" );
+    if( IS_ERR( globalMem_class ) ){
+        printk( "class_create() failed: %ld\n", PTR_ERR(globalMem_class) );
+        return -1;
+    }
+    globalMem_class->dev_uevent  = globalMem_class_uevent;
+    globalMem_class->dev_release = globalMem_device_release;
+    printk( "create globalMem_class success!\n" );
 
+    globalMem_device_class = device_create( globalMem_class, &globalMem_busDevice, \
+                                            MKDEV(cdevMajor,1), NULL, "globalMem_device_class" );
+    if( IS_ERR( globalMem_device_class ) ){
+        printk( "device_create() failed: %ld\n", PTR_ERR(globalMem_device_class) );
+        return -1;
+    }
+    ret = device_create_file( globalMem_device_class, &dev_attr_globalMem_device_attr );
+    if( ret ){
+        printk( "create globalMem_device_0 attribute file failed!\n" );
+        return ret;
+    }
+    ret = device_add_groups( globalMem_device_class, \
+                            ( const struct attribute_group*[] ){ &globalMem_device_attrGroup_set, NULL } );
+    if( ret ){
+        printk( "create globalMem_device_0 attribute group file failed!\n" );
+        return ret;
+    }
+    
+    printk( "create globalMem_device_class success!\n" );
+
+    globalMem_device.devt = MKDEV( cdevMajor, 0 );
     ret = device_register( &globalMem_device );
     if( ret ){
         printk( KERN_DEBUG "Unable to register device\n" );
@@ -172,11 +200,13 @@ void __exit globalMem_device_exit( unsigned int cdevMajor ){
     printk( "======= globalMem_device_exit() start =======\n" );
     
     device_unregister( &globalMem_device );
+    printk( "globalMem_device unregister success\n" );
+
+    device_destroy( globalMem_class, MKDEV(cdevMajor, 1) );    
+    printk( "globalMem_device_class destroy success\n" );
     
-    //device_destroy( globalMem_class, MKDEV(cdevMajor, 0) );
-    //device_destroy( globalMem_class, MKDEV(cdevMajor, 1) );
-    
-    //class_destroy( globalMem_class );
+    class_destroy( globalMem_class );
+    printk( "global_class destroy success\n" );
     
     printk( "======= globalMem_device_exit() end =======\n" );
 }
