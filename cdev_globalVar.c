@@ -37,8 +37,11 @@ struct file_operations globalVar_fops = {
     release:           globalVar_release,
 };
 
+/* 用户空间的lseek()方法最终会调用本函数 */
 loff_t globalVar_llseek( struct file* filp, loff_t offset, int whence ){
     printk( "call globalVar_llseek() func:\n" );
+    printk( "offset is: %lld, whence is: %d\n", offset, whence );
+    printk( "file.f_pos is: %lld\n", filp->f_pos );
     return 0;
 }
 

@@ -27,6 +27,8 @@ int main( int argc, char argv[] ){
     scanf( "%s", cBuf );
     write( fd, cBuf, (strlen(cBuf)) );
 
+    lseek( fd, 123, SEEK_END );
+
     /*
      * 通过ioctl()方法设置本字符设备的当前读写位置，最终会调用cdev对象文件操作表中的
      * unlocked_ioctl()函数（cdev.ops->unlocked_ioctl()字段） */
