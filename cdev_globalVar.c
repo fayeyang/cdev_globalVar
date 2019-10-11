@@ -37,7 +37,10 @@ struct file_operations globalVar_fops = {
     release:           globalVar_release,
 };
 
-/* 用户空间的lseek()方法最终会调用本函数 */
+/* 用户空间的lseek()方法最终会调用本函数
+ * 由于本示例在内核中使用2个全局变量分别作为当前读偏移量和当前写偏移量，据我分析
+ * 不适合使用lseek()分别设置读/写偏移量，因此globalVar_llseek()函数仅作为示意，
+ * 在其中没有具体设置操作。而将设置读写偏移量的操作放在globalVar_ioctl()函数中 */
 loff_t globalVar_llseek( struct file* filp, loff_t offset, int whence ){
     printk( "call globalVar_llseek() func:\n" );
     printk( "offset is: %lld, whence is: %d\n", offset, whence );
@@ -45,7 +48,9 @@ loff_t globalVar_llseek( struct file* filp, loff_t offset, int whence ){
     return 0;
 }
 
-/* 用户空间的ioctl()方法最终会调用本函数 */
+/* 用户空间的ioctl()方法最终会调用本函数 
+ * 若传入的cmd实参为0，表示将本字符设备文件的当前读偏移量赋值为arg实参
+ * 若传入的cmd实参为1，表示将本字符设备文件的当前写偏移量赋值为arg实参 */
 static long globalVar_ioctl( struct file* filp, unsigned int cmd, unsigned long arg ){
     printk( "======= globalVar_ioctl() start =======\n" );
     switch( cmd ){
